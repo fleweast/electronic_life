@@ -270,25 +270,75 @@ Herbivore.prototype.act = function(context) {
         return {type: "move", direction: space};
     }
 }
+/* Проблемы травоядного, которые решились в умном травоядном: простые травоядные жадные – поедают каждое растение,
+которое находят, пока полностью не уничтожат всю растительность.
+Во-вторых, их случайное движение заставляет их болтаться неэффективно и помирать с голоду,
+если рядом не окажется растений. Слишком быстро размножаются,
+что делает циклы от изобилия к голоду слишком быстрыми.*/
 
+function SmartHerbivore(){
+    this.energy = 20;
+    this.direction = "n";
+}
+
+SmartHerbivore.prototype.act = function (context) {
+    let space = context.find(" ");
+    let plants = context.findAll("*");
+    if (this.energy > 50 && space) {
+        return {type: "reproduce", direction: space};
+    }
+    if (plants.length > 1) {
+        return {type: "eat", direction: randomElement(plants)};
+    }
+    if (context.look(this.direction) !== " " && space) {
+        this.direction = space;
+    }
+    return {type: "move", direction: this.direction};
+}
+
+//Хищник
+function Predator() {
+    this.energy = 50 ;
+}
+
+Predator.prototype.act = function (context) {
+    let space = context.find(" ");
+    let herbivore = context.find("O");
+    if (this.energy > 100) {
+        return {type: "reproduce", direction: space};
+    }
+    if (herbivore) {
+        return {type: "eat", direction: herbivore};
+    }
+    if (space) {
+        return {type: "move", direction: space};
+    }
+}
 
 function Wall() {}
 
 let valley = new LifeLikeWorld(
-    ["############################",
-        "#####                 ######",
-        "##   ***                **##",
-        "#   *##**         **  O  *##",
-        "#    ***     O    ##**    *#",
-        "#       O         ##***    #",
-        "#                 ##**     #",
-        "#   O       #*             #",
-        "#*          #**       O    #",
-        "#***        ##**    O    **#",
-        "##****     ###***       *###",
-        "############################"],
+    ["####################################################",
+        "#       O         ####         ****              ###",
+        "#   *  @  ##                 ########    @  OO    ##",
+        "#   *    ##        O O                 ****       *#",
+        "#       ##*                        ##########     *#",
+        "#      ##***  *         ****                     **#",
+        "#* **  #  *  ***      #########                  **#",
+        "#* **  #      *               #   *              **#",
+        "#     ##              #   O   #  ***          ######",
+        "#*          O @       #       #   *        O  #    #",
+        "#*                    #  ######                 ** #",
+        "###          ****          ***                  ** #",
+        "#       O                        @         O       #",
+        "#   *     ##  ##  ##  ##               ###      *  #",
+        "#   **         #              *       #####  O     #",
+        "##  **  O   O  #  #    ***  ***        ###      ** #",
+        "###               #   *****                    ****#",
+        "####################################################"],
     {"#": Wall,
-        "O": Herbivore,
+        "@": Predator,
+        "O": SmartHerbivore,
         "*": Plant}
 );
 animateWorld(valley);
